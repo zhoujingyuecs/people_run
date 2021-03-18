@@ -17,16 +17,18 @@ WILL = 0
 MONEY = 1
 STOCK = 2
 INIT_PRICE = 3
-IN_MOVE = 4
-OUT_MOVE = 5
+IN_MIN = 4
+IN_MAX = 5
+OUT_MIN = 6
+OUT_MAX = 7
 
 def init_pool():
-	init_people = [] # [will, money, stock, init_price, in_move, out_move], will: 1 mean buy, 0 means sell.
+	init_people = [] # [will, money, stock, init_price, in_min, in_max, out_min, out_max], will: 1 mean buy, 0 means sell.
 	# Need a small number of money and stock to avoid zero deal trap.
 	for i in range(0, int(PEOPLE_NUM / 2)):
-		init_people.append([0, 0.02, 0.02, 0.2, 1.0, 1.0]) # [0.0, 0.5, 0.2, 1.2, 0.8]
+		init_people.append([0, 0.002, 0.002, 0.2, 1.0, 1.0, 1.0, 1.0])
 	for i in range(int(PEOPLE_NUM / 2), PEOPLE_NUM):
-		init_people.append([1, 0.02, 0.02, 0.2, 1.0, 1.0]) # [0.0, 0.5, 0.2, 1.2, 0.8]
+		init_people.append([1, 0.002, 0.002, 0.2, 1.0, 1.0, 1.0, 1.0])
 	# Init the pool
 	# The people in the pool means the init state of people and the strategy of people.
 	pool = []
@@ -173,17 +175,17 @@ def move_the_will(people, date, std_price):
 	for k in range(PEOPLE_NUM):
 		# People think about what tomorrow they want to do.
 		if people[k][WILL] == I_WANT_BUY: # The people want to buy.
-			# When the current price touch the out price in people, they want sell.
-			if (people[k][OUT_MOVE] >= 1 and std_price[date] > people[k][INIT_PRICE] * people[k][OUT_MOVE]) or \
-			   (people[k][OUT_MOVE] <= 1 and std_price[date] < people[k][INIT_PRICE] * people[k][OUT_MOVE]):
+			# When the current price beyound the out price in people, they want sell.
+			if std_price[date] >= people[k][OUT_MAX] * people[k][INIT_PRICE] or std_price[date] <= people[k][OUT_MIN] * people[k][INIT_PRICE]:
 				people[k][WILL] = I_WANT_SELL
 				people[k][INIT_PRICE] = std_price[date]
+			continue
 		if people[k][WILL] == I_WANT_SELL: # The people want to sell.
-			# When the current price touch the in price in people, they want buy.
-			if (people[k][IN_MOVE] >= 1 and std_price[date] > people[k][INIT_PRICE] * people[k][IN_MOVE]) or \
-			   (people[k][IN_MOVE] <= 1 and std_price[date] < people[k][INIT_PRICE] * people[k][IN_MOVE]):
+			# When the current price beyound the in price in people, they want buy.
+			if std_price[date] >= people[k][IN_MAX] * people[k][INIT_PRICE] or std_price[date] <= people[k][IN_MIN] * people[k][INIT_PRICE]:
 				people[k][WILL] = I_WANT_BUY
 				people[k][INIT_PRICE] = std_price[date]
+			continue
 
 def show_result(pool):
 	# Show the data.

@@ -64,10 +64,22 @@ def pool_update(pool):
 				people[k][INIT_PRICE] *= 1 + (random.random() - 0.5) / 5
 			# The probability change his favor to buy.
 			if random.random() < 0.2:
-				people[k][IN_MOVE] *= 1 + (random.random() - 0.5) / 5
+				people[k][IN_MIN] *= 1 + (random.random() - 0.5) / 5
+				if people[k][IN_MIN] > 1:
+					people[k][IN_MIN] = 1
+			if random.random() < 0.2:
+				people[k][IN_MAX] *= 1 + (random.random() - 0.5) / 5
+				if people[k][IN_MAX] < 1:
+					people[k][IN_MAX] = 1
 			# The probability change his favor to sell.
 			if random.random() < 0.2:
-				people[k][OUT_MOVE] *= 1 + (random.random() - 0.5) / 5
+				people[k][OUT_MIN] *= 1 + (random.random() - 0.5) / 5
+				if people[k][OUT_MIN] > 1:
+					people[k][OUT_MIN] = 1
+			if random.random() < 0.2:
+				people[k][OUT_MAX] *= 1 + (random.random() - 0.5) / 5
+				if people[k][OUT_MAX] < 1:
+					people[k][OUT_MAX] = 1
 			# The probability he be another person.
 			if random.random() < 0:
 				pool_num = random.randint(0, half_pool - 1)
