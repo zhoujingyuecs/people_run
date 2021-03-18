@@ -1,8 +1,9 @@
 import pickle
 import copy
+import random
 
 POOL_SIZE = 20        # How many strategy in the pool.
-PEOPLE_NUM = 50       # How many people in this stock world.
+PEOPLE_NUM = 40       # How many people in this stock world.
 TRAIN_TIME = 10000    # How many time the training repeat.
 TRAIN_DATA = 4000     # How many data the training use.
 ALL_DATA = 5000       # The data including training and testing.
@@ -39,10 +40,23 @@ def save_pool(pool):
 	file.close()
 
 def load_pool():
-	global pool # This function need to change the value of pool
 	file = open(r"./pool.data","rb")
 	pool = pickle.load(file)
 	file.close()
+	return pool
+
+def magic_load_pool():
+	file = open(r"./pool.data","rb")
+	old_pool = pickle.load(file)
+	file.close()
+	pool = []
+	for i in range(POOL_SIZE):
+		people = []
+		lucky_strategy = random.randint(0, len(old_pool) - 1)
+		for j in range(PEOPLE_NUM):
+			lucky_person = random.randint(0, len(old_pool[lucky_strategy][0]) - 1)
+			people.append(old_pool[lucky_strategy][0][lucky_person])
+		pool.append([copy.deepcopy(people), -1])
 	return pool
 
 def load_data():
