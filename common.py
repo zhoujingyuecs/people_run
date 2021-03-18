@@ -23,9 +23,9 @@ def init_pool():
 	init_people = [] # [will, money, stock, init_price, in_move, out_move], will: 1 mean buy, 0 means sell.
 	# Need a small number of money and stock to avoid zero deal trap.
 	for i in range(0, int(PEOPLE_NUM / 2)):
-		init_people.append([0, 0.002, 0.002, 0.2, 1.2, 0.8]) # [0.0, 0.5, 0.2, 1.2, 0.8]
+		init_people.append([0, 0.02, 0.02, 0.2, 1.2, 0.8]) # [0.0, 0.5, 0.2, 1.2, 0.8]
 	for i in range(int(PEOPLE_NUM / 2), PEOPLE_NUM):
-		init_people.append([1, 0.002, 0.002, 0.2, 1.2, 0.8]) # [0.0, 0.5, 0.2, 1.2, 0.8]
+		init_people.append([1, 0.02, 0.02, 0.2, 1.2, 0.8]) # [0.0, 0.5, 0.2, 1.2, 0.8]
 	# Init the pool
 	# The people in the pool means the init state of people and the strategy of people.
 	pool = []
@@ -89,6 +89,7 @@ def get_the_will(people, date, std_price):
 
 # Enable the possible deal.
 def fit_the_will(people, date, buy_will, sell_will, std_price):
+	# print(buy_will, sell_will)
 	fit_will = min(buy_will, sell_will)
 	remain_buy_will = fit_will
 	remain_sell_will = fit_will
@@ -122,14 +123,14 @@ def fit_the_will(people, date, buy_will, sell_will, std_price):
 # Get the will for each people to buy and sell on tomorrow.
 def move_the_will(people, date, std_price):
 	for k in range(PEOPLE_NUM):
-		# If the will has been satisfied, they think about what tomorrow they want to do.
-		if people[k][WILL] == I_WANT_BUY and people[k][MONEY] == 0: # The people all in stock.
+		# People think about what tomorrow they want to do.
+		if people[k][WILL] == I_WANT_BUY: # The people want to buy.
 			# When the current price touch the out price in people, they want sell.
 			if (people[k][OUT_MOVE] > 1 and std_price[date] > people[k][INIT_PRICE] * people[k][OUT_MOVE]) or \
 			   (people[k][OUT_MOVE] < 1 and std_price[date] < people[k][INIT_PRICE] * people[k][OUT_MOVE]):
 				people[k][WILL] = I_WANT_SELL
 				people[k][INIT_PRICE] = std_price[date]
-		if people[k][WILL] == I_WANT_SELL and people[k][STOCK] == 0: # The people all in money.
+		if people[k][WILL] == I_WANT_SELL: # The people want to sell.
 			# When the current price touch the in price in people, they want buy.
 			if (people[k][IN_MOVE] > 1 and std_price[date] > people[k][INIT_PRICE] * people[k][IN_MOVE]) or \
 			   (people[k][IN_MOVE] < 1 and std_price[date] < people[k][INIT_PRICE] * people[k][IN_MOVE]):
