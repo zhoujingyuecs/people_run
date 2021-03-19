@@ -2,11 +2,13 @@ import pickle
 import copy
 import random
 
-POOL_SIZE = 20         # How many strategy in the pool.
-PEOPLE_NUM = 40        # How many people in this stock world.
+POOL_SIZE = 50         # How many strategy in the pool.
+PEOPLE_NUM = 400        # How many people in this stock world.
 TRAIN_TIME = 10000000  # How many time the training repeat.
-TRAIN_DATA = 4000      # How many data the training use.
+TRAIN_DATA = 3000      # How many data the training use.
 ALL_DATA = 5000        # The data including training and testing.
+
+TRAIN_SPEED = 50000         # Adjust the para changing spped.
 
 # Init the people
 # The type of will
@@ -21,9 +23,13 @@ IN_MIN = 4
 IN_MAX = 5
 OUT_MIN = 6
 OUT_MAX = 7
+# The structure of glob_arg
+MONEY_SLOPE = 0
+STOCK_SLOPE = 1
 
-def init_pool():
+def init_arg():
 	init_people = [] # [will, money, stock, init_price, in_min, in_max, out_min, out_max], will: 1 mean buy, 0 means sell.
+	glob_arg = [0.0, 0.0] # [money_slope, stock_slope]
 	for i in range(0, int(PEOPLE_NUM / 2)):
 		init_people.append([0, 0.002, 0.002, 0.2, 1.0, 1.0, 1.0, 1.0])
 	for i in range(int(PEOPLE_NUM / 2), PEOPLE_NUM):
@@ -33,11 +39,12 @@ def init_pool():
 	pool = []
 	for i in range(POOL_SIZE):
 		pool.append([copy.deepcopy(init_people), -1]) # [people, score]
-	return pool
+	arg = [pool, glob_arg]
+	return arg
 
-def random_init_pool():
-	# [will, money, stock, init_price, in_min, in_max, out_min, out_max], will: 1 mean buy, 0 means sell.
-	pool = []
+def random_init_arg():
+	pool = [] # [will, money, stock, init_price, in_min, in_max, out_min, out_max], will: 1 mean buy, 0 means sell.
+	glob_arg = [] # [money_slope, stock_slope]
 	for i in range(POOL_SIZE):
 		people = []
 		for k in range(PEOPLE_NUM):
@@ -50,22 +57,27 @@ def random_init_pool():
 				one_person.append(random.random() * 2)
 			people.append(one_person)
 		pool.append([people, -1])
-	return pool
+	# glob_arg.append(random.random() * 2)
+	# glob_arg.append(random.random() * 2)
+	glob_arg = [0.0, 0.0]
+	arg = [pool, glob_arg]
+	return arg
 
-def save_pool(pool):
-	file = open(r"./pool.data","wb")
-	pickle.dump(pool, file)
+def save_arg(arg):
+	file = open(r"./arg.data","wb")
+	pickle.dump(arg, file)
 	file.close()
 
-def load_pool():
-	file = open(r"./pool.data","rb")
-	pool = pickle.load(file)
+def load_arg():
+	file = open(r"./arg.data","rb")
+	arg = pickle.load(file)
 	file.close()
-	return pool
+	return arg
 
-def magic_load_pool():
-	file = open(r"./pool.data","rb")
-	old_pool = pickle.load(file)
+def magic_load_arg():
+	file = open(r"./arg.data","rb")
+	arg = pickle.load(file)
+	old_pool = arg[0] 
 	file.close()
 	pool = []
 	for i in range(POOL_SIZE):
@@ -75,7 +87,7 @@ def magic_load_pool():
 			lucky_person = random.randint(0, len(old_pool[lucky_strategy][0]) - 1)
 			people.append(old_pool[lucky_strategy][0][lucky_person])
 		pool.append([copy.deepcopy(people), -1])
-	return pool
+	return [pool, arg[1]]
 
 def load_data():
 	file = open(r"./SHSE000001.data","rb")
@@ -168,15 +180,12 @@ def move_the_will(people, date, std_price):
 				people[k][INIT_PRICE] = std_price[date]
 			continue
 
-def show_result(pool):
-	# Show the data.
-	print('=============')
-	print('The old score')
-	# print(pool)
-	for i in range(5):
-		print(pool[i][1])
-	for i in range(1):
-		print('The strategy', i)
-		for j in range(PEOPLE_NUM):
-			print(pool[i][0][j])
-	print('=============')
+# Adjust the total money and total stock with time.
+def adjust_the_world(people, glob_arg):
+	luck_people_num = int(PEOPLE_NUM / 4)
+	# Money printer.
+	for k in range(0, luck_people_num):
+		people[k][MONEY] += glob_arg[MONEY_SLOPE] / float(luck_people_num)
+	# Stock builder.
+	for k in range(luck_people_num, luck_people_num * 2):
+		people[k][STOCK] += glob_arg[STOCK_SLOPE] / float(luck_people_num)

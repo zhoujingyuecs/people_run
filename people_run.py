@@ -5,7 +5,7 @@ import copy
 import random
 from common import * 
 
-def calculate(pool, std_price, std_volume):
+def calculate(pool, std_price, std_volume, glob_arg):
 	# For each strategy, calculate the score.
 	for i in range(POOL_SIZE): 
 		# If this strategy already got the score, no need to calculate again.
@@ -26,12 +26,14 @@ def calculate(pool, std_price, std_volume):
 			score += (predicted_volume - real_volume) * (predicted_volume - real_volume)
 			# At last get the will for each people to buy and sell on tomorrow.
 			move_the_will(people, j, std_price)
+			# Adjust the total money and total stock with time.
+			adjust_the_world(people, glob_arg)
 		pool[i][1] = score
 
 def take_score(strategy):
     return strategy[1]
 
-def pool_update(pool):
+def arg_update(pool, glob_arg):
 	# Sort the pool by score.
 	pool.sort(key=take_score)
 	# Replace the last half by top half strategy.
@@ -55,29 +57,29 @@ def pool_update(pool):
 					people[k][WILL] = 1
 			# The probability change his init money.
 			if random.random() < 0.2:
-				people[k][MONEY] *= 1 + (random.random() - 0.5) / 5000
+				people[k][MONEY] *= 1 + (random.random() - 0.5) / TRAIN_SPEED
 			# The probability change his init stock.
 			if random.random() < 0.2:
-				people[k][STOCK] *= 1 + (random.random() - 0.5) / 5000
+				people[k][STOCK] *= 1 + (random.random() - 0.5) / TRAIN_SPEED
 			# The probability change his init price.
 			if random.random() < 0.2:
-				people[k][INIT_PRICE] *= 1 + (random.random() - 0.5) / 5000
+				people[k][INIT_PRICE] *= 1 + (random.random() - 0.5) / TRAIN_SPEED
 			# The probability change his favor to buy.
 			if random.random() < 0.2:
-				people[k][IN_MIN] *= 1 + (random.random() - 0.5) / 5000
+				people[k][IN_MIN] *= 1 + (random.random() - 0.5) / TRAIN_SPEED
 				if people[k][IN_MIN] > 1:
 					people[k][IN_MIN] = 1
 			if random.random() < 0.2:
-				people[k][IN_MAX] *= 1 + (random.random() - 0.5) / 5000
+				people[k][IN_MAX] *= 1 + (random.random() - 0.5) / TRAIN_SPEED
 				if people[k][IN_MAX] < 1:
 					people[k][IN_MAX] = 1
 			# The probability change his favor to sell.
 			if random.random() < 0.2:
-				people[k][OUT_MIN] *= 1 + (random.random() - 0.5) / 5000
+				people[k][OUT_MIN] *= 1 + (random.random() - 0.5) / TRAIN_SPEED
 				if people[k][OUT_MIN] > 1:
 					people[k][OUT_MIN] = 1
 			if random.random() < 0.2:
-				people[k][OUT_MAX] *= 1 + (random.random() - 0.5) / 5000
+				people[k][OUT_MAX] *= 1 + (random.random() - 0.5) / TRAIN_SPEED
 				if people[k][OUT_MAX] < 1:
 					people[k][OUT_MAX] = 1
 			# The probability he be another person.
@@ -89,26 +91,38 @@ def pool_update(pool):
 					people[k][num] = pool[pool_num][0][person_num][num]
 		# Adjust total money number.
 		if random.random() < 0.2:
-			rate = 1 + (random.random() - 0.5) / 5000
+			rate = 1 + (random.random() - 0.5) / TRAIN_SPEED
 			for k in range(PEOPLE_NUM):
 				people[k][MONEY] *= rate
 		# Adjust total stock number.
 		if random.random() < 0.2:
-			rate = 1 + (random.random() - 0.5) / 5000
+			rate = 1 + (random.random() - 0.5) / TRAIN_SPEED
 			for k in range(PEOPLE_NUM):
 				people[k][STOCK] *= rate
+		# Adjust money slope.
+		if random.random() < 0.2:
+			glob_arg[MONEY_SLOPE] += (random.random() - 0.5) / TRAIN_SPEED
+			if glob_arg[MONEY_SLOPE] < 0:
+				glob_arg[MONEY_SLOPE] = 0
+		# Adjust stock slope.
+		if random.random() < 0.2:
+			glob_arg[STOCK_SLOPE] += (random.random() - 0.5) / TRAIN_SPEED
+			if glob_arg[STOCK_SLOPE] < 0:
+				glob_arg[STOCK_SLOPE] = 0
+
 
 
 std_price, std_volume = load_data()
-# pool = random_init_pool()
-pool = load_pool()
-# pool = magic_load_pool()
-# pool = init_pool()
-# show_result(pool)
+arg = random_init_arg()
+# arg = load_arg()
+# arg = magic_load_arg()
+# arg = init_arg()
+pool = arg[0]
+glob_arg = arg[1]
 # The main training function
 for time in range(TRAIN_TIME):
 	if time % 20 == 0:
 		print('Best score in', time, 'time:', pool[0][1])
-		save_pool(pool)
-	calculate(pool, std_price, std_volume)
-	pool_update(pool)
+		save_arg(arg)
+	calculate(pool, std_price, std_volume, glob_arg)
+	arg_update(pool, glob_arg)
