@@ -8,7 +8,9 @@ pool = load_pool()
 show_result(pool)
 
 predicted = []
+stock_as_stock_list = []
 money_as_stock_list = []
+money_as_money_list = []
 money_all_list = []
 deal_day = []
 people = copy.deepcopy(pool[0][0]) # Copy the best strategy init state.
@@ -31,11 +33,15 @@ for j in range(0, ALL_DATA):
 	# Count all the money and money in the market.
 	money_as_money = 0
 	money_as_stock = 0
+	stock_as_stock = 0
 	for k in range(PEOPLE_NUM):
 		money_as_money += people[k][MONEY]
 		money_as_stock += people[k][STOCK] * std_price[j]
+		stock_as_stock += people[k][STOCK]
 	money_all = money_as_money + money_as_stock
 	money_as_stock_list.append(money_as_stock)
+	money_as_money_list.append(money_as_money)
+	stock_as_stock_list.append(stock_as_stock)
 	money_all_list.append(money_all)
 
 	# Show the deal day.
@@ -43,7 +49,7 @@ for j in range(0, ALL_DATA):
 		deal_day.append(j)
 
 	# Show the diff between people.
-	if j > 2:
+	if j != 100:
 		continue
 	for k in range(PEOPLE_NUM):
 		for l in range(8):
@@ -53,9 +59,12 @@ for j in range(0, ALL_DATA):
 plt.plot(std_price, color='blue')
 plt.plot(std_volume, color='red')
 plt.plot(predicted, color='green')
-plt.plot(money_as_stock_list, color='magenta')
-plt.plot(money_all_list, color='yellow')
-# for i in range(len(deal_day)):
-# 	plt.plot([deal_day[i], deal_day[i]], [0, 0.2], color='black')
+# plt.plot(money_all_list, color='yellow', linestyle='-.')
+# plt.plot(money_as_money_list, color='cyan', linestyle='-.')
+plt.plot(money_as_stock_list, color='darkslategray', linestyle='-.')
+plt.plot(stock_as_stock_list, color='magenta', linestyle='-.')
+
+for i in range(len(deal_day)):
+	plt.plot([deal_day[i], deal_day[i]], [1.0, 1.1], color='black')
 plt.plot([TRAIN_DATA, TRAIN_DATA], [0, 1], color='black')
 plt.show()

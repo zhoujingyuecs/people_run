@@ -2,11 +2,11 @@ import pickle
 import copy
 import random
 
-POOL_SIZE = 20        # How many strategy in the pool.
-PEOPLE_NUM = 40       # How many people in this stock world.
-TRAIN_TIME = 10000    # How many time the training repeat.
-TRAIN_DATA = 4000     # How many data the training use.
-ALL_DATA = 5000       # The data including training and testing.
+POOL_SIZE = 20         # How many strategy in the pool.
+PEOPLE_NUM = 40        # How many people in this stock world.
+TRAIN_TIME = 10000000  # How many time the training repeat.
+TRAIN_DATA = 4000      # How many data the training use.
+ALL_DATA = 5000        # The data including training and testing.
 
 # Init the people
 # The type of will
@@ -24,7 +24,6 @@ OUT_MAX = 7
 
 def init_pool():
 	init_people = [] # [will, money, stock, init_price, in_min, in_max, out_min, out_max], will: 1 mean buy, 0 means sell.
-	# Need a small number of money and stock to avoid zero deal trap.
 	for i in range(0, int(PEOPLE_NUM / 2)):
 		init_people.append([0, 0.002, 0.002, 0.2, 1.0, 1.0, 1.0, 1.0])
 	for i in range(int(PEOPLE_NUM / 2), PEOPLE_NUM):
@@ -34,6 +33,23 @@ def init_pool():
 	pool = []
 	for i in range(POOL_SIZE):
 		pool.append([copy.deepcopy(init_people), -1]) # [people, score]
+	return pool
+
+def random_init_pool():
+	# [will, money, stock, init_price, in_min, in_max, out_min, out_max], will: 1 mean buy, 0 means sell.
+	pool = []
+	for i in range(POOL_SIZE):
+		people = []
+		for k in range(PEOPLE_NUM):
+			one_person = []
+			if random.random() > 0.5:
+				one_person.append(I_WANT_BUY)
+			else:
+				one_person.append(I_WANT_SELL)
+			for l in range(7):
+				one_person.append(random.random() * 2)
+			people.append(one_person)
+		pool.append([people, -1])
 	return pool
 
 def save_pool(pool):
