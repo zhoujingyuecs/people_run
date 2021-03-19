@@ -102,41 +102,6 @@ def get_the_will(people, date, std_price):
 			sell_will += people[k][STOCK] # They want all their stock be the money.
 	return buy_will, sell_will
 
-# # Enable the possible deal.
-# def fit_the_will(people, date, buy_will, sell_will, std_price):
-# 	# print(buy_will, sell_will)
-# 	# for i in range(len(people)):
-# 	# 	print(people[i])
-# 	fit_will = min(buy_will, sell_will)
-# 	remain_buy_will = fit_will
-# 	remain_sell_will = fit_will
-# 	# Fit people's will
-# 	for k in range(PEOPLE_NUM):
-# 		# If this people want to buy and still have money, and other people want sell, fit the deal.
-# 		if people[k][WILL] == I_WANT_BUY and people[k][MONEY] > 0 and remain_sell_will > 0: 
-# 			# Still have enough people want to sell, fit all this people's will.
-# 			if remain_sell_will > people[k][MONEY] / std_price[date]: 
-# 				people[k][STOCK] = people[k][MONEY] / std_price[date]
-# 				remain_sell_will -= people[k][MONEY] / std_price[date]
-# 				people[k][MONEY] = 0
-# 			# Still have people want to sell but not enough, fit all remain_sell_will.
-# 			if remain_sell_will <= people[k][MONEY] / std_price[date]: 
-# 				people[k][STOCK] = remain_sell_will
-# 				people[k][MONEY] -= remain_sell_will * std_price[date]
-# 				remain_sell_will = 0
-# 		# If this people want to sell and still have stock, and other people want buy, fit the deal.
-# 		if people[k][WILL] == I_WANT_SELL and people[k][STOCK] > 0 and remain_buy_will > 0:
-# 			# Still have enough people want to buy, fit all this people's will.
-# 			if remain_buy_will > people[k][STOCK]: 
-# 				people[k][MONEY] = people[k][STOCK] * std_price[date]
-# 				remain_buy_will -= people[k][STOCK]
-# 				people[k][STOCK] = 0
-# 			# Still have people want to buy but not enough, fit all remain_sell_will.
-# 			if remain_buy_will <= people[k][STOCK]: 
-# 				people[k][MONEY] = remain_buy_will * std_price[date]
-# 				people[k][STOCK] -= remain_buy_will
-# 				remain_buy_will = 0
-
 # Enable the possible deal.
 def fit_the_will(people, date, buy_will, sell_will, std_price):
 	# print(buy_will, sell_will)
@@ -149,25 +114,25 @@ def fit_the_will(people, date, buy_will, sell_will, std_price):
 	if buy_will >= sell_will:
 		for k in range(PEOPLE_NUM):
 			if people[k][WILL] == I_WANT_SELL:
-				people[k][MONEY] = people[k][STOCK] * std_price[date]
+				people[k][MONEY] += people[k][STOCK] * std_price[date]
 				people[k][STOCK] = 0
 	if sell_will >= buy_will:
 		for k in range(PEOPLE_NUM):
 			if people[k][WILL] == I_WANT_BUY:
-				people[k][STOCK] = people[k][MONEY] / std_price[date]
+				people[k][STOCK] += people[k][MONEY] / std_price[date]
 				people[k][MONEY] = 0
 	# The oppotunity of the great will should be dicide equally.
 	if buy_will >= sell_will:
 		ratio = sell_will / buy_will
 		for k in range(PEOPLE_NUM):
 			if people[k][WILL] == I_WANT_BUY:
-				people[k][STOCK] = ratio * people[k][MONEY] / std_price[date]
+				people[k][STOCK] += ratio * people[k][MONEY] / std_price[date]
 				people[k][MONEY] -= ratio * people[k][MONEY]
 	if sell_will >= buy_will:
 		ratio = buy_will / sell_will
 		for k in range(PEOPLE_NUM):
 			if people[k][WILL] == I_WANT_SELL:
-				people[k][MONEY] = ratio * people[k][STOCK] * std_price[date]
+				people[k][MONEY] += ratio * people[k][STOCK] * std_price[date]
 				people[k][STOCK] -= ratio * people[k][STOCK]
 
 # Get the will for each people to buy and sell on tomorrow.
