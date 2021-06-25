@@ -6,3 +6,9 @@
 ## 2. the_big_down
 ![image](https://user-images.githubusercontent.com/32698786/123398954-a7ced600-d5d6-11eb-89d3-40e13855bc9f.png)  
 在每次证券指数发生单日大幅度（超过2%）上涨下跌前，通常经过一段相对较长的平缓上升时期，再加一段相对较短的快速下跌时期。
+## 3. image_analysis
+
+
+https://user-images.githubusercontent.com/32698786/123452057-a0c4b980-d610-11eb-90e6-e54cbe773210.mp4
+
+统计历史上和当前走势相似的数据，再通过其后续走势预测当前后续走势。成功概率0.483，没啥用。
