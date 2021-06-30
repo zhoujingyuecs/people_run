@@ -102,3 +102,17 @@ print('up_break:', up_break)
 print('down_break:', down_break)
 print('The probability of up_break is:', str(up_break / up_num)[:5])
 print('The probability of down_break is:', str(down_break / down_num)[:5])
+
+# =========================
+# 以下是一次运行的结果
+# DATA_LENGTH = 200 # 支撑位所在的最远时间跨度
+# DATA_MIN = 40 # 支撑位所在的最近时间跨度
+# SUPPORT_RANGE = 0.01 # 支撑位在支撑点附近的范围
+# -----------------
+# up_num: 27
+# down_num: 32
+# up_break: 14
+# down_break: 14
+# The probability of up_break is: 0.518
+# The probability of down_break is: 0.437
+# =========================
