@@ -7,7 +7,7 @@
 https://github.com/jindaxiang/akshare  
 琢磨琢磨。  
 
-### Automatic investment plan.
+### 1. Automatic investment plan.
 喜欢梭哈的A与喜欢定投的B之间发生的故事。   ₍ᐢ •⌄• ᐢ₎
 初始资产一百万，随机挑选一个基金，再随机挑选一个时间点，买入并持有两百个交易日后卖出。
 区别是A在买入时间点一次性买入，而B在买入时间点周围分十次，每次间隔十个交易日定投买入。
