@@ -51,6 +51,14 @@ def science_random(data):
 		if len(data[the_fund][2]) > the_day + LIANG_BAI_TIAN:
 			return the_fund, the_day
 
+# 指定日期的色子。
+def science_random_specify_the_day(data, the_day):
+	# 活不过两百个交易日的基金不要。
+	while True:
+		the_fund = random.randint(0, len(data) - 1)
+		if len(data[the_fund][2]) > the_day + LIANG_BAI_TIAN:
+			return the_fund
+
 # 止盈。
 def stop_profit(data, the_fund, the_day, money, zhi_ying_dian):
 	C_the_fund = the_fund
@@ -71,7 +79,8 @@ def stop_profit(data, the_fund, the_day, money, zhi_ying_dian):
 			C_money = Decimal(C_fund) * Decimal(data[C_the_fund][2]['累计净值'].iloc[C_the_day + pass_day])
 			pass_day = 0
 			# 继续买入下一支随机基金。
-			C_the_fund, C_the_day = science_random(data)
+			C_the_day += pass_day
+			C_the_fund = science_random_specify_the_day(data, C_the_day)
 			C_fund = Decimal(C_money) / Decimal(data[C_the_fund][2]['累计净值'].iloc[C_the_day])
 	# 过完两百天后卖出。
 	C_money = Decimal(C_fund) * Decimal(data[C_the_fund][2]['累计净值'].iloc[C_the_day + pass_day])
@@ -140,6 +149,6 @@ for i in range(YI_WAN_CI):
 # 看看结果。
 result = [result_A, result_C1, result_C2]
 show_result(result)
-# result_A: 9.199395431990278991552940097E+94
-# result_C1: 1.535927743027954744059416322E-15
-# result_C2: 1.247741738479314281757635761E+47
+# result_A: 3.110766509439339204170105285E+90
+# result_C1: 4.905526955472122208109206043E-44
+# result_C2: 2.463885415863515469261163478E+33
