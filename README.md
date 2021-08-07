@@ -1,16 +1,36 @@
 # people_run
+
+---------------------------------------------------  
+## 2021.08.06  
+
+找到个贼好用的数据下载工具。  
+https://github.com/jindaxiang/akshare  
+琢磨琢磨。  
+
+### 1. Automatic investment plan.
+喜欢梭哈的A与喜欢定投的B之间发生的故事。   ₍ᐢ •⌄• ᐢ₎  
+初始资产一百万，随机挑选一个基金，再随机挑选一个时间点，买入并持有两百个交易日后卖出。  
+区别是A在买入时间点一次性买入，而B在买入时间点周围分十次，每次间隔十个交易日定投买入。  
+重复一万次，得到如下（资产-重复次数）结果图，其中A用红色标记，B用蓝色标记。  
+**结论一：就数学期望来讲，基金随便买，一次买一年，次数多了稳赚不赔。**  
+**结论二：一次性买入比定投收益高。**  
+![result](https://user-images.githubusercontent.com/32698786/128525932-668b8f75-6694-493b-94a9-27746736f11a.png)
+
+---------------------------------------------------  
+## 很久之前
+
 试图通过统计的方法找出股票市场的某些共性。已经找到的共性有：
-## 1. days_probability
+### 1. days_probability
 ![image](https://user-images.githubusercontent.com/32698786/123397576-275ba580-d5d5-11eb-8b94-a7b76edca9f0.png)  
 在30~50个交易日的时间跨度中，追跌杀涨的策略胜率高了0.02。
-## 2. the_big_down
+### 2. the_big_down
 ![image](https://user-images.githubusercontent.com/32698786/123398954-a7ced600-d5d6-11eb-89d3-40e13855bc9f.png)  
 在每次证券指数发生单日大幅度（超过2%）上涨下跌前，通常经过一段相对较长的平缓上升时期，再加一段相对较短的快速下跌时期。
-## 3. image_analysis
+### 3. image_analysis
 https://user-images.githubusercontent.com/32698786/123452057-a0c4b980-d610-11eb-90e6-e54cbe773210.mp4
 
 统计历史上和当前走势相似的数据，再通过其后续走势预测当前后续走势。成功概率0.483。  
-## 4. the_support
+### 4. the_support
 https://user-images.githubusercontent.com/32698786/123956686-8c503a80-d9dd-11eb-93aa-6fa06ef02574.mp4
 
 历史上的高点和低点会不会影响股价明天的走势？  
@@ -18,11 +38,4 @@ https://user-images.githubusercontent.com/32698786/123956686-8c503a80-d9dd-11eb-
 这里给出一个统计上的答案：到达历史高点并向上突破的概率为0.518，到达历史低点并向下突破的概率为0.437。  
 ps: 这里用到的数据量较小（到达历史高点27次，到达历史低点32次），且改变参数后结果差异较大。  
 
----------------------------------------------------  
-2021.08.06  
 
-找到个贼好用的数据下载工具。  
-https://github.com/jindaxiang/akshare  
-琢磨琢磨。  
-
-₍ᐢ •⌄• ᐢ₎
