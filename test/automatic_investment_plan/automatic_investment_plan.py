@@ -35,6 +35,7 @@ def get_data():
 	# <class 'pandas.core.frame.DataFrame'>
 	file = open(r"./akshare_fund-1000.data","rb")
 	data = pickle.load(file)
+	# 清除有空值的基金
 	clean_data = []
 	for i in range(len(data)):
 		if(not data[i][2]['累计净值'].isnull().any()):
@@ -53,14 +54,14 @@ def science_random(data):
 			return the_fund, the_day
 
 # 定投。
-def automatic_investment_plan(data, the_fund, the_day, money):
+def automatic_investment_plan(data, the_fund, the_day, end_day, money):
 	every_money = money / SHI_CI
 	B_fund = 0
 	B_money = money
 	for i in range(SHI_CI):
 		B_money -= Decimal(every_money)
 		B_fund += Decimal(every_money) / Decimal(data[the_fund][2]['累计净值'].iloc[the_day + i * SHI_GE_JIAO_YI_RI])
-	B_money += Decimal(B_fund) * Decimal(data[the_fund][2]['累计净值'].iloc[the_day + LIANG_BAI_TIAN])
+	B_money += Decimal(B_fund) * Decimal(data[the_fund][2]['累计净值'].iloc[end_day])
 	return B_money
 
 # 比赛。
@@ -83,13 +84,14 @@ def game(data):
 	the_fund, the_day = science_random(data)
 	A_money = YI_BAI_WAN
 	A_fund = A_money / Decimal(data[the_fund][2]['累计净值'].iloc[the_day])
-	A_money = A_fund * Decimal(data[the_fund][2]['累计净值'].iloc[the_day + LIANG_BAI_TIAN])
+	end_day = the_day + LIANG_BAI_TIAN
+	A_money = A_fund * Decimal(data[the_fund][2]['累计净值'].iloc[end_day])
 	# A问，B，你怎么讲。
 	# B表示，我和你买一样的基金，也拿两百天。
 	# A表示，行啊，很公平。
 	# B表示，不过我要定投，每次把资金分散为十次买入，每次隔十个交易日。
 	B_money = YI_BAI_WAN
-	B_money = automatic_investment_plan(data, the_fund, the_day, B_money) 
+	B_money = automatic_investment_plan(data, the_fund, the_day, end_day, B_money) 
 	# B表示，你都梭哈了，我才开始定投，等于你持仓的日子比我长，这不公平。
 	# A表示，那你想怎么办。
 	# B表示，我要搞三个策略：
@@ -97,21 +99,22 @@ def game(data):
 	# 第二个策略在A梭哈时正好定投了一半。
 	# 第三个策略在A梭哈后才开始定投。
 	# A表示，行啊，随便你搞。
-	B1_money = automatic_investment_plan(data, the_fund, the_day - SHI_CI * SHI_GE_JIAO_YI_RI, B_money) 
-	B2_money = automatic_investment_plan(data, the_fund, the_day - int(SHI_CI * SHI_GE_JIAO_YI_RI / 2), B_money) 
-	B3_money = automatic_investment_plan(data, the_fund, the_day, B_money) 
+	B1_money = automatic_investment_plan(data, the_fund, the_day - SHI_CI * SHI_GE_JIAO_YI_RI, end_day, B_money) 
+	B2_money = automatic_investment_plan(data, the_fund, the_day - int(SHI_CI * SHI_GE_JIAO_YI_RI / 2 ), end_day, B_money) 
+	B3_money = automatic_investment_plan(data, the_fund, the_day, end_day,  B_money) 
 	return [A_money, B1_money, B2_money, B3_money]
 
 # 正式的比赛。
 def real_game(data, money):
 	the_fund, the_day = science_random(data)
+	end_day = the_day + LIANG_BAI_TIAN
 	for i in range(len(money)):
-		money[i] = money[i] * Decimal(0.95) # 每次交易收取五个点的佣金
+		money[i] = money[i] * Decimal(0.93) # 每次交易收取五个点的佣金
 	A_fund = Decimal(money[0]) / Decimal(data[the_fund][2]['累计净值'].iloc[the_day]) / Decimal(10) # 先除十再乘十避免精度误差。
-	A_money = Decimal(A_fund) * Decimal(data[the_fund][2]['累计净值'].iloc[the_day + LIANG_BAI_TIAN]) * Decimal(10)
-	B1_money = automatic_investment_plan(data, the_fund, the_day - SHI_CI * SHI_GE_JIAO_YI_RI, money[1]) 
-	B2_money = automatic_investment_plan(data, the_fund, the_day - int(SHI_CI * SHI_GE_JIAO_YI_RI / 2), money[2]) 
-	B3_money = automatic_investment_plan(data, the_fund, the_day, money[3]) 
+	A_money = Decimal(A_fund) * Decimal(data[the_fund][2]['累计净值'].iloc[end_day]) * Decimal(10)
+	B1_money = automatic_investment_plan(data, the_fund, the_day - SHI_CI * SHI_GE_JIAO_YI_RI, end_day, money[1]) 
+	B2_money = automatic_investment_plan(data, the_fund, the_day - int(SHI_CI * SHI_GE_JIAO_YI_RI / 2) + SHI_GE_JIAO_YI_RI, end_day, money[2]) 
+	B3_money = automatic_investment_plan(data, the_fund, the_day, end_day, money[3]) 
 	return [A_money, B1_money, B2_money, B3_money]
 
 def show_result(result):
@@ -151,10 +154,11 @@ for i in range(YI_WAN_CI):
 result = [result_A, result_B1, result_B2, result_B3]
 # 比完了，让我们看看谁才是傻逼。
 show_result(result)
-# result_A: 5.577709324451721472753628027E+184
-# result_B1: 6.973293256880032081976803930E+104
-# result_B2: 8.240322023058569382907544563E+101
-# result_B3: 2.800527497726490029222361886E+95
+# result_A: 1.914779851594186074648194863E+92
+# result_B1: 7.515061349935717333982846092E+207
+# result_B2: 4.044469779233652566927705239E+88
+# result_B3: 11786553.23598523745291351566
+
 
 
 
