@@ -25,7 +25,7 @@ FILE_NAME = r"./akshare_fund-11615.data"
 
 fund_em_open_fund_daily_df = ak.fund_em_open_fund_daily()
 print(fund_em_open_fund_daily_df)
-# 总共数据量为11615
+# 总共数据量为11625
 
 if os.path.exists(FILE_NAME):
 	file = open(FILE_NAME, "rb")
