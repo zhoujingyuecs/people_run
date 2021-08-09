@@ -1,5 +1,6 @@
 import pickle
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import akshare as ak
 import random
 import numpy as np
@@ -12,6 +13,9 @@ YI_BAI_WAN = Decimal(1000000)
 LIANG_BAI_TIAN = 200
 C1_ZHI_YING_DIAN = 1.1
 C2_ZHI_YING_DIAN = 1.2
+C3_ZHI_YING_DIAN = 1.3
+C4_ZHI_YING_DIAN = 1.6
+C5_ZHI_YING_DIAN = 1.9
 YI_WAN_CI = 10000
 
 # 获取所有基金数据。
@@ -99,17 +103,43 @@ def real_game(data, money):
 	# 再琢磨琢磨C的策略。
 	C1_money = stop_profit(data, the_fund, the_day, money[1], C1_ZHI_YING_DIAN) 
 	C2_money = stop_profit(data, the_fund, the_day, money[2], C2_ZHI_YING_DIAN) 
-	return [A_money, C1_money, C2_money]
+	C3_money = stop_profit(data, the_fund, the_day, money[3], C3_ZHI_YING_DIAN) 
+	C4_money = stop_profit(data, the_fund, the_day, money[4], C4_ZHI_YING_DIAN) 
+	C5_money = stop_profit(data, the_fund, the_day, money[5], C5_ZHI_YING_DIAN) 
+	return [A_money, C1_money, C2_money, C3_money, C4_money, C5_money]
 
 def show_result(result):
 	print('result_A:', result[0][-1])
 	print('result_C1:', result[1][-1])
 	print('result_C2:', result[2][-1])
+	print('result_C3:', result[3][-1])
+	print('result_C4:', result[4][-1])
+	print('result_C5:', result[5][-1])
 	plt.yscale('log')
-	plt.plot(result[0], color='red', linewidth = 1)
-	plt.plot(result[1], color='blue', linewidth = 1)
-	plt.plot(result[2], color='blue', linewidth = 1, linestyle = '--')
+	# 画上阴影。
+	x = range(len(result[0]))
+	C_max = []
+	C_min = []
+	for i in range(len(result[0])):
+		C_range = []
+		for j in range(1, len(result)):
+			C_range.append(result[j][i])
+		C_max.append(max(C_range))
+		C_min.append(min(C_range))
+	plt.fill_between(x, C_max, C_min, alpha=0.3, color='blue')
+	# 搞颜色。
+	viridis = cm.get_cmap('viridis', 256)
+	newcolors = viridis(np.linspace(0, 1, 256))
+	# 画线。
+	plt.plot(result[1], color= newcolors[0], linewidth = 1, label='stop profit 10%')
+	plt.plot(result[2], color= newcolors[50], linewidth = 1, label='stop profit 20%')
+	plt.plot(result[3], color= newcolors[100], linewidth = 1, label='stop profit 30%')
+	plt.plot(result[4], color= newcolors[150], linewidth = 1, label='stop profit 60%')
+	plt.plot(result[5], color= newcolors[200], linewidth = 1, label='stop profit 90%')
+	plt.plot(result[0], color='red', linewidth = 2, label='not stop profit')
+	plt.legend()
 	plt.show()
+
 
 data = get_data()
 # 一天，两个聪明的投资者，A和C碰面了。
@@ -136,19 +166,28 @@ data = get_data()
 # A疑惑，对，还是不对？
 # 好在A有穿越时空的能力，A决定一试。
 # 老样子，两种策略初始资金都为一百万。
-money = [YI_BAI_WAN, YI_BAI_WAN, YI_BAI_WAN]
+money = [YI_BAI_WAN, YI_BAI_WAN, YI_BAI_WAN, YI_BAI_WAN, YI_BAI_WAN, YI_BAI_WAN]
 result_A = [money[0]]
 result_C1 = [money[1]]
 result_C2 = [money[2]]
+result_C3 = [money[3]]
+result_C4 = [money[4]]
+result_C5 = [money[5]]
 # 还是重复一万次。
 for i in range(YI_WAN_CI):
 	money = real_game(data, money)
 	result_A.append(money[0])
 	result_C1.append(money[1])
 	result_C2.append(money[2])
+	result_C3.append(money[3])
+	result_C4.append(money[4])
+	result_C5.append(money[5])
 # 看看结果。
-result = [result_A, result_C1, result_C2]
+result = [result_A, result_C1, result_C2, result_C3, result_C4, result_C5]
 show_result(result)
-# result_A: 3.110766509439339204170105285E+90
-# result_C1: 4.905526955472122208109206043E-44
-# result_C2: 2.463885415863515469261163478E+33
+# result_A: 1.669705651476775619279506968E+91
+# result_C1: 4.060110497984485055315275236E-41
+# result_C2: 5.190512346389447512302115296E+39
+# result_C3: 9.596585004050730189454035698E+66
+# result_C4: 4.017115659084595754886481370E+95
+# result_C5: 1.924093234754594565408168929E+97
