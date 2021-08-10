@@ -1,6 +1,7 @@
 import akshare as ak
 import pickle
 import os
+import datetime
 
 # 通过akshare获取所有基金的数据。
 # 数据格式为：
@@ -21,31 +22,66 @@ import os
 # 2393  2021-08-05  3.6751
 # <class 'pandas.core.frame.DataFrame'>
 
-FILE_NAME = r"./akshare_fund-11615.data"
+def get_data():
+	FILE_NAME = r"./akshare_fund-11615.data"
 
-fund_em_open_fund_daily_df = ak.fund_em_open_fund_daily()
-print(fund_em_open_fund_daily_df)
-# 总共数据量为11625
+	fund_em_open_fund_daily_df = ak.fund_em_open_fund_daily()
+	print(fund_em_open_fund_daily_df)
+	# 总共数据量为11625
 
-if os.path.exists(FILE_NAME):
-	file = open(FILE_NAME, "rb")
+	if os.path.exists(FILE_NAME):
+		file = open(FILE_NAME, "rb")
+		data = pickle.load(file)
+	else:
+		data = []
+
+	for i in range(len(data), len(fund_em_open_fund_daily_df)):
+		print(i)
+		one_data = []
+		fund_em_info_df = ak.fund_em_open_fund_info(fund=fund_em_open_fund_daily_df['基金代码'].iloc[i], indicator="累计净值走势")
+		one_data.append(fund_em_open_fund_daily_df['基金代码'].iloc[i])
+		one_data.append(fund_em_open_fund_daily_df['基金简称'].iloc[i])
+		one_data.append(fund_em_info_df)
+		data.append(one_data)
+		if i % 100 == 0:
+			file = open(FILE_NAME, "wb")
+			pickle.dump(data, file)
+			file.close()
+
+	file = open(FILE_NAME, "wb")
+	pickle.dump(data, file)
+	file.close()
+
+def clean_data():
+	file = open(r"./akshare_fund-11420.data","rb")
 	data = pickle.load(file)
-else:
-	data = []
+	print(len(data))
 
-for i in range(len(data), len(fund_em_open_fund_daily_df)):
-	print(i)
-	one_data = []
-	fund_em_info_df = ak.fund_em_open_fund_info(fund=fund_em_open_fund_daily_df['基金代码'].iloc[i], indicator="累计净值走势")
-	one_data.append(fund_em_open_fund_daily_df['基金代码'].iloc[i])
-	one_data.append(fund_em_open_fund_daily_df['基金简称'].iloc[i])
-	one_data.append(fund_em_info_df)
-	data.append(one_data)
-	if i % 100 == 0:
-		file = open(FILE_NAME, "wb")
-		pickle.dump(data, file)
-		file.close()
+	# 清除有空值的基金。
+	clean_data = []
+	for i in range(len(data)):
+		if(not data[i][2]['累计净值'].isnull().any()):
+			clean_data.append(data[i])
+	print(len(clean_data))
+	# 清除有丢失记录的基金。
+	data = clean_data
+	clean_data = []
+	for i in range(len(data)):
+		flag = 1
+		for j in range(len(data[i][2]) - 1):
+			# today = datetime.datetime.strptime(data[i][2]['净值日期'].iloc[j], '%Y-%m-%d')
+			today = data[i][2]['净值日期'].iloc[j]
+			tomorrow = data[i][2]['净值日期'].iloc[j + 1]
+			# tomorrow = datetime.datetime.strptime(data[i][2]['净值日期'].iloc[j + 1], '%Y-%m-%d')
+			if tomorrow - today > datetime.timedelta(days = 15):
+				flag = 0
+				break
+		if flag == 1:
+			clean_data.append(data[i])
+	print(len(clean_data))
 
-file = open(FILE_NAME, "wb")
-pickle.dump(data, file)
-file.close()
+	file = open(r"./akshare_fund-11420-clean-10804.data", "wb")
+	pickle.dump(data, file)
+	file.close()
+
+clean_data()
