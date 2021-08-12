@@ -23,7 +23,7 @@ import datetime
 # <class 'pandas.core.frame.DataFrame'>
 
 def get_data():
-	FILE_NAME = r"./akshare_fund-11615.data"
+	FILE_NAME = r"./210812-akshare_fund.data"
 
 	fund_em_open_fund_daily_df = ak.fund_em_open_fund_daily()
 	print(fund_em_open_fund_daily_df)
@@ -53,7 +53,7 @@ def get_data():
 	file.close()
 
 def clean_data():
-	file = open(r"./akshare_fund-11420.data","rb")
+	file = open(r"./210812-akshare_fund.data","rb")
 	data = pickle.load(file)
 	print(len(data))
 
@@ -80,8 +80,50 @@ def clean_data():
 			clean_data.append(data[i])
 	print(len(clean_data))
 
-	file = open(r"./akshare_fund-11420-clean-10804.data", "wb")
-	pickle.dump(data, file)
+	file = open(r"./210812-akshare_fund_clean.data", "wb")
+	pickle.dump(clean_data, file)
 	file.close()
 
-clean_data()
+def dict_by_date():
+	# 数据格式为：
+	# dict_name: {基金代码: 基金简称, ...}
+	# list_date: [2011-09-21, ..., 2021-08-05]
+	# list_data: [{基金代码: 当日累计净值, ...}, ...]
+	# data_dict: [dict_name, list_date, list_data]
+	file = open(r"./210812-akshare_fund_clean.data","rb")
+	# file = open(r"./akshare_fund-11420-clean-10804.data","rb")
+	data = pickle.load(file)
+	print(len(data))
+
+	dict_name = {}
+	for i in range(len(data)):
+		dict_name[data[i][0]] = data[i][1]
+	# print(dict_name)
+
+	list_date = []
+	for i in range(len(data)):
+		for j in range(len(data[i][2])):
+			if data[i][2]['净值日期'].iloc[j] not in list_date:
+				list_date.append(data[i][2]['净值日期'].iloc[j])
+	list_date.sort()
+	# print(list_date)
+
+	tmp_dict = {} # {净值日期: 净值日期在 list_date 中的下标, ...}
+	for i in range(len(list_date)):
+		tmp_dict[list_date[i]] = i
+	list_data = []
+	for i in range(len(list_date)):
+		list_data.append({})
+	for i in range(len(data)):
+		for j in range(len(data[i][2])):
+			list_data[ tmp_dict[data[i][2]['净值日期'].iloc[j]] ][data[i][0]] = data[i][2]['累计净值'].iloc[j]
+	# print(list_data)
+
+	data_dict = [dict_name, list_date, list_data]
+	file = open(r"./210812-akshare_fund_dict.data", "wb")
+	pickle.dump(data_dict, file)
+	file.close()
+
+# get_data()
+# clean_data()
+dict_by_date()
