@@ -19,7 +19,7 @@ SUN_HAO = 0.94 # 年化损耗。
 # ----------------------------
 TEST_LENGTH = 300 # 测试集长度。 
 TRAIN_LENGTH = 2000 # 训练集长度。
-TEST_FUND_NUM = 20 # 测试时每次购买的基金数量。
+TEST_FUND_NUM = 10 # 测试时每次购买的基金数量。
 CPU_COST_MAX = 1000 # 最多寻找次数
 
 # 获取所有基金数据。
@@ -161,6 +161,7 @@ def real_game(money):
 def game_test(d_i, d_j):
 	print('TEST!')
 	result = []
+	test_day = []
 	for the_day in range(len(list_date) - TEST_LENGTH, len(list_date) - LIANG_BAI_TIAN):
 		end_day = the_day + LIANG_BAI_TIAN
 		fund_enumerate = list(enumerate(list_data[the_day])) # [(0, 基金代码), ...]
@@ -177,7 +178,8 @@ def game_test(d_i, d_j):
 			avg_profit = sum(one_result) / len(one_result)
 			avg_annualized = pow(float(avg_profit), 200.0 / LIANG_BAI_TIAN)
 			result.append(avg_annualized)
-	return result
+			test_day.append(the_day)
+	return result, test_day
 
 def show_result(result):
 	A_annualized = pow( pow(float(result[0][-1]), 1.0 / YI_WAN_CI), 200.0 / LIANG_BAI_TIAN) / SUN_HAO
@@ -201,19 +203,33 @@ def show_result(result):
 			  marker = the_style, markevery = 0.05, markersize = 10)
 	plt.plot(result[0], color='red', linewidth = 5, label='random')
 	plt.legend()
-	plt.show(block = False)
-	plt.pause(1)
+	plt.show()
 
-def show_test_result(test_result):
+def show_test_result(test_result, test_day):
 	the_sum = 1.0
+	the_win = 0
 	for i in range(len(test_result)):
 		the_sum *= test_result[i]
+		if test_result[i] > 1:
+			the_win += 1
 	the_avg = pow(the_sum, 1.0 / len(test_result))
 	print('The Test Annualized is: ', the_avg)
+	print(the_win, 'times in', len(test_result), 'win, the win rate is: ', float(the_win) / len(test_result))
 	plt.figure()
 	plt.bar(range(len(test_result)), test_result, color='blue')
-	plt.show(block = False)
-	plt.pause(1)
+	plt.plot([1] * len(test_result), color='red') 
+	plt.plot([1.2] * len(test_result), color='green') 
+	x_index = []
+	x_value = []
+	space = int(len(test_day) / 10)
+	for i in range(len(test_day)):
+		if i % space == 0:
+			x_index.append(i)
+			x_value.append(list_date[test_day[i]])
+	plt.xticks(x_index, x_value)
+	plt.show()
+	# plt.show(block = False)
+	# plt.pause(1)
 
 def show_which_to_buy(d_i, d_j, the_day):
 	fund_enumerate = list(enumerate(list_data[the_day])) # [(0, 基金代码), ...]
@@ -243,20 +259,20 @@ list_data = data_dict[2]
 # 因此，将游戏规则做出一定的改动会更公平。
 # 即，每次A和D都在同一个时间点买入。
 # 时间点的选择需要能够同时满足A和D的条件，会导致策略A的绝对收益变动，但不会影响A和D之间的相对好坏。
-money = []
-result = []
-for i in range(len(D_SHI_JIAN) * len(D_ZHAN_JI) + 1):
-	money.append(YI_BAI_WAN)
-	result.append([YI_BAI_WAN])
-# 还是重复一万次。
-for i in range(YI_WAN_CI):
-	if i % 500 == 0:
-		print(i)
-	money = real_game(money)
-	for j in range(len(money)):
-		result[j].append(money[j])
-# 保存结果
-save_result(result)
+# money = []
+# result = []
+# for i in range(len(D_SHI_JIAN) * len(D_ZHAN_JI) + 1):
+# 	money.append(YI_BAI_WAN)
+# 	result.append([YI_BAI_WAN])
+# # 还是重复一万次。
+# for i in range(YI_WAN_CI):
+# 	if i % 500 == 0:
+# 		print(i)
+# 	money = real_game(money)
+# 	for j in range(len(money)):
+# 		result[j].append(money[j])
+# # 保存结果
+# save_result(result)
 result = load_result()
 # 看看结果。
 print('---------------------------------')
@@ -274,65 +290,12 @@ D_annualized = pow( pow(float(result[d_i * len(D_ZHAN_JI) + d_j + 1][-1]), 1.0 /
 print('result_D', D_SHI_JIAN[d_i], D_ZHAN_JI[d_j], ', Annualized:', D_annualized)
 print('---------------------------------')
 # 使用测试集测试。
-test_result = game_test(d_i, d_j)
-show_test_result(test_result)
+test_result, test_day = game_test(d_i, d_j)
+show_test_result(test_result, test_day)
 # 开始荐股。 
 print('---------------------------------')
 the_day = len(list_date) - 1
 while show_which_to_buy(d_i, d_j, the_day) == -1:
 	the_day -= 1
-input("Press Enter to continue...")
-
-# 开方显示收益，直接推荐，排名幅度同时。
-# 测试集使用最近一个月数据，每日尝试。
-
-
-# 20-10000-0.93
-# max: # result_C 200 [0.3, 1.0] : 550725188605637903465019749.7 , Annualized: 1.1435574469041072
-# result_A: 628.8521026462285254787293279 , Annualized: 1.0822201103917861
-# result_C 5 [-0.1, 0] : 0.8774804599871091976658542990 , Annualized: 1.0751282881174613
-# result_C 5 [0, 0.1] : 0.3220762293877168091448675394 , Annualized: 1.0740512629468808
-# result_C 5 [0.1, 0.2] : 75474.24585817346610909708858 , Annualized: 1.0874138251476613
-# result_C 5 [0.2, 0.3] : 20614.33716351029963367799840 , Annualized: 1.0860034897738613
-# result_C 5 [0.3, 1.0] : 33897547975.84392108478110709 , Annualized: 1.1016590836092348
-# result_C 20 [-0.1, 0] : 0.0005139964946518387707728416113 , Annualized: 1.0671562484111072
-# result_C 20 [0, 0.1] : 0.00009409971340329180949943483951 , Annualized: 1.065345902254758
-# result_C 20 [0.1, 0.2] : 82.76362300720656735481997240 , Annualized: 1.080027691909146
-# result_C 20 [0.2, 0.3] : 120960242.3407283156583870706 , Annualized: 1.0954679957147067
-# result_C 20 [0.3, 1.0] : 84564035874139.92203382010418 , Annualized: 1.1103099638114424
-# result_C 200 [-0.1, 0] : 1.283249583243314940617338966E-16 , Annualized: 1.036633793888258
-# result_C 200 [0, 0.1] : 11.52767345512668524441252852 , Annualized: 1.0779007971735795
-# result_C 200 [0.1, 0.2] : 208368192061.1704964892934608 , Annualized: 1.1036614744169635
-# result_C 200 [0.2, 0.3] : 181381900454250856126.9356358 , Annualized: 1.1266153013439777
-# result_C 200 [0.3, 1.0] : 550725188605637903465019749.7 , Annualized: 1.1435574469041072
-# result_C 600 [-0.1, 0] : 793091231678.5116589626408046 , Annualized: 1.105137649542256
-# result_C 600 [0, 0.1] : 3937370.370948159533680503560 , Annualized: 1.0917224916213948
-# result_C 600 [0.1, 0.2] : 2659799053972120620732229.381 , Annualized: 1.1374751047199827
-# result_C 600 [0.2, 0.3] : 183920377092563527732.8531333 , Annualized: 1.126630959349454
-# result_C 600 [0.3, 1.0] : 0.09987975888644672667703984843 , Annualized: 1.0727944768341893
-
-
-# 200-10000-0.93 
-# max: # result_D 200 [0.2, 0.3] : 8.716452702596289631699528364E+104 , Annualized: 1.09273052249708
-# result_A: 2.943713091708591208041391350E-122 , Annualized: 1.0553948674669535
-# result_D 5 [-0.1, 0] : 5.000077693890895326620934516E-117 , Annualized: 1.0562425284487302
-# result_D 5 [0, 0.1] : 2.193635422515208641461689388E-146 , Annualized: 1.0514931853707306
-# result_D 5 [0.1, 0.2] : 6.797033781713856954834249091E-99 , Annualized: 1.0591867503110786
-# result_D 5 [0.2, 0.3] : 8.680858831725370504939187149E-54 , Annualized: 1.0665460762147785
-# result_D 5 [0.3, 1.0] : 3.712418519353519945753987831E-25 , Annualized: 1.071243899948939
-# result_D 20 [-0.1, 0] : 2.052635145169502593063034831E-90 , Annualized: 1.0605664200084257
-# result_D 20 [0, 0.1] : 2.383062978922594413350583156E-109 , Annualized: 1.057488193074036
-# result_D 20 [0.1, 0.2] : 2.201568880909644413809348611E-48 , Annualized: 1.067431218670672
-# result_D 20 [0.2, 0.3] : 0.04954937093014879710594129865 , Annualized: 1.0750534419515316
-# result_D 20 [0.3, 1.0] : 2.687904359470881378524820753E+54 , Annualized: 1.0842905656873911
-# result_D 200 [-0.1, 0] : 1.182345693395023017639725633E-109 , Annualized: 1.0574387822970066
-# result_D 200 [0, 0.1] : 1.136567961646395330867862633E-101 , Annualized: 1.058735375695232
-# result_D 200 [0.1, 0.2] : 6.526423083914822842549028391E+55 , Annualized: 1.0845211596973556
-# result_D 200 [0.2, 0.3] : 8.716452702596289631699528364E+104 , Annualized: 1.09273052249708
-# result_D 200 [0.3, 1.0] : 1.189827274735326192500208913E-13 , Annualized: 1.073137613186092
-# result_D 600 [-0.1, 0] : 1.177846086498879121973988357E-152 , Annualized: 1.0504816182501617
-# result_D 600 [0, 0.1] : 1.838420958756789341158351440E-129 , Annualized: 1.0542283260999468
-# result_D 600 [0.1, 0.2] : 3422837583043142485925.823488 , Annualized: 1.0788291614465342
-# result_D 600 [0.2, 0.3] : 1.820269613368583015186099744E-15 , Annualized: 1.0728386076181566
-# result_D 600 [0.3, 1.0] : 4.001380196678809909757946763E-61 , Annualized: 1.0653456381934483
+# input("Press Enter to continue...")
 
