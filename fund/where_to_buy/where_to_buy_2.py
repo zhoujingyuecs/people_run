@@ -19,7 +19,7 @@ SUN_HAO = 0.94 # 年化损耗。
 # ----------------------------
 TEST_LENGTH = 300 # 测试集长度。 
 TRAIN_LENGTH = 2000 # 训练集长度。
-TEST_FUND_NUM = 10 # 测试时每次购买的基金数量。
+TEST_FUND_NUM = 30 # 测试时每次购买的基金数量。
 CPU_COST_MAX = 1000 # 最多寻找次数
 
 # 获取所有基金数据。
@@ -29,7 +29,7 @@ def get_data():
 	# list_date: [2011-09-21, ..., 2021-08-05]
 	# list_data: [{基金代码: 当日累计净值, ...}, ...]
 	# data_dict: [dict_name, list_date, list_data]
-	file = open(r"./210812-akshare_fund_dict.data","rb")
+	file = open(r"../210812-akshare_fund_dict.data","rb")
 	data = pickle.load(file)
 	return data
 
@@ -168,13 +168,36 @@ def game_test(d_i, d_j):
 		one_result = []
 		for i in range(TEST_FUND_NUM):
 			D_fund_index = D_choose_fund(the_day, fund_enumerate, D_SHI_JIAN[d_i], D_ZHAN_JI[d_j])
-			the_fund = fund_enumerate[D_fund_index][1]
 			if D_fund_index == -1:
 				# print('LOST the test for', list_date[the_day])
 				break
+			the_fund = fund_enumerate[D_fund_index][1]
 			D_profit = Decimal(list_data[end_day][the_fund]) / Decimal(list_data[the_day][the_fund])
 			one_result.append(D_profit)
-		if (len(one_result)) > 0:
+		if (len(one_result)) == TEST_FUND_NUM:
+			avg_profit = sum(one_result) / len(one_result)
+			avg_annualized = pow(float(avg_profit), 200.0 / LIANG_BAI_TIAN)
+			result.append(avg_annualized)
+			test_day.append(the_day)
+	return result, test_day
+
+def base_game_test():
+	print('BASE TEST!')
+	result = []
+	test_day = []
+	for the_day in range(len(list_date) - TEST_LENGTH, len(list_date) - LIANG_BAI_TIAN):
+		end_day = the_day + LIANG_BAI_TIAN
+		fund_enumerate = list(enumerate(list_data[the_day])) # [(0, 基金代码), ...]
+		one_result = []
+		for i in range(TEST_FUND_NUM):
+			A_fund_index = A_choose_fund(the_day, fund_enumerate)
+			if A_fund_index == -1:
+				# print('LOST the test for', list_date[the_day])
+				break
+			the_fund = fund_enumerate[A_fund_index][1]
+			A_profit = Decimal(list_data[end_day][the_fund]) / Decimal(list_data[the_day][the_fund])
+			one_result.append(A_profit)
+		if (len(one_result)) == TEST_FUND_NUM:
 			avg_profit = sum(one_result) / len(one_result)
 			avg_annualized = pow(float(avg_profit), 200.0 / LIANG_BAI_TIAN)
 			result.append(avg_annualized)
@@ -205,7 +228,8 @@ def show_result(result):
 	plt.legend()
 	plt.show()
 
-def show_test_result(test_result, test_day):
+def show_test_result(test_result, test_day, A_test_result, A_test_day):
+	# 输出D的统计信息。
 	the_sum = 1.0
 	the_win = 0
 	for i in range(len(test_result)):
@@ -215,16 +239,28 @@ def show_test_result(test_result, test_day):
 	the_avg = pow(the_sum, 1.0 / len(test_result))
 	print('The Test Annualized is: ', the_avg)
 	print(the_win, 'times in', len(test_result), 'win, the win rate is: ', float(the_win) / len(test_result))
+	# 输出A（基准）的统计信息。
+	the_sum = 1.0
+	the_win = 0
+	for i in range(len(A_test_result)):
+		the_sum *= A_test_result[i]
+		if A_test_result[i] > 1:
+			the_win += 1
+	the_avg = pow(the_sum, 1.0 / len(A_test_result))
+	print('The Base Annualized is: ', the_avg)
+	print(the_win, 'times in', len(A_test_result), 'win, the win rate is: ', float(the_win) / len(A_test_result))
+	# 绘图。
 	plt.figure()
-	plt.bar(range(len(test_result)), test_result, color='blue')
-	plt.plot([1] * len(test_result), color='red') 
-	plt.plot([1.2] * len(test_result), color='green') 
+	plt.plot(test_day, test_result, color='blue', label = 'plan D')
+	plt.plot(A_test_day, A_test_result, color='red', label = 'plan A')
+	plt.plot(A_test_day, [1] * len(A_test_result), color='black') 
+	plt.plot(A_test_day, [1.2] * len(A_test_result), color='green') 
 	x_index = []
 	x_value = []
 	space = int(len(test_day) / 10)
 	for i in range(len(test_day)):
 		if i % space == 0:
-			x_index.append(i)
+			x_index.append(test_day[i])
 			x_value.append(list_date[test_day[i]])
 	plt.xticks(x_index, x_value)
 	plt.show()
@@ -291,7 +327,8 @@ print('result_D', D_SHI_JIAN[d_i], D_ZHAN_JI[d_j], ', Annualized:', D_annualized
 print('---------------------------------')
 # 使用测试集测试。
 test_result, test_day = game_test(d_i, d_j)
-show_test_result(test_result, test_day)
+A_test_result, A_test_day = base_game_test()
+show_test_result(test_result, test_day, A_test_result, A_test_day)
 # 开始荐股。 
 print('---------------------------------')
 the_day = len(list_date) - 1
@@ -299,3 +336,87 @@ while show_which_to_buy(d_i, d_j, the_day) == -1:
 	the_day -= 1
 # input("Press Enter to continue...")
 
+# YI_BAI_WAN = Decimal(1000000)
+# LIANG_BAI_TIAN = 20
+# YI_WAN_CI = 20000
+# D_SHI_JIAN = [50, 100, 200, 400, 600]
+# D_ZHAN_JI = [[-0.1, 0], [0, 0.1], [0.1, 0.2], [0.2, 0.3], [0.3, 1.0]]
+# SUN_HAO = 0.94 # 年化损耗。
+# # ----------------------------
+# TEST_LENGTH = 300 # 测试集长度。 
+# TRAIN_LENGTH = 2000 # 训练集长度。
+# TEST_FUND_NUM = 30 # 测试时每次购买的基金数量。
+# CPU_COST_MAX = 1000 # 最多寻找次数
+# ---------------------------------
+# result_A: 0.0001032281121236310776516036169 , Annualized: 1.0589587553265243
+# result_D 50 [-0.1, 0] : 10536767.44634003132854170955 , Annualized: 1.07246591925654
+# result_D 50 [0, 0.1] : 76390091.83256389452617996732 , Annualized: 1.0735287134605016
+# result_D 50 [0.1, 0.2] : 302803313483295449.0550960020 , Annualized: 1.0854572574461578
+# result_D 50 [0.2, 0.3] : 3664903734246962034429.019571 , Annualized: 1.0905715844808166
+# result_D 50 [0.3, 1.0] : 1387036930960836243.929770326 , Annualized: 1.086283518761012
+# result_D 100 [-0.1, 0] : 1.519972783327030739032067550E-50 , Annualized: 1.00453035377149
+# result_D 100 [0, 0.1] : 1.792409842591400361780422815E-15 , Annualized: 1.045920957159434
+# result_D 100 [0.1, 0.2] : 1.361091683388269888531881867E-26 , Annualized: 1.0326165708731707
+# result_D 100 [0.2, 0.3] : 5.235306672510146438118086383E-24 , Annualized: 1.035694374819274
+# result_D 100 [0.3, 1.0] : 7.903613346935958630376044136E-10 , Annualized: 1.0527398412362907
+# result_D 200 [-0.1, 0] : 4.047309635646517854037717825E-36 , Annualized: 1.0213526724839312
+# result_D 200 [0, 0.1] : 4784.575998790836037307777214 , Annualized: 1.068346343958671
+# result_D 200 [0.1, 0.2] : 71544333916932602.71036911848 , Annualized: 1.0846745093154941
+# result_D 200 [0.2, 0.3] : 16384082845090883276592783.23 , Annualized: 1.095164499661426
+# result_D 200 [0.3, 1.0] : 3438015528349568472127343.573 , Annualized: 1.0943098297072367
+# result_D 400 [-0.1, 0] : 152761322932611166.7042970331 , Annualized: 1.0850859823702719
+# result_D 400 [0, 0.1] : 852832553139647078.8124221244 , Annualized: 1.0860193874626183
+# result_D 400 [0.1, 0.2] : 1.840683223777773540206638774E+50 , Annualized: 1.1272094886411224
+# result_D 400 [0.2, 0.3] : 3.401498323309085127876570313E+61 , Annualized: 1.141926053131528
+# result_D 400 [0.3, 1.0] : 3.927814955948733899121101786E-8 , Annualized: 1.0547978160275964
+# result_D 600 [-0.1, 0] : 7717601374358753.035915179923 , Annualized: 1.0834674973595242
+# result_D 600 [0, 0.1] : 2018386867802.749769763175209 , Annualized: 1.0790079601426392
+# result_D 600 [0.1, 0.2] : 1.783855646739150862595658932E+45 , Annualized: 1.120721816646478
+# result_D 600 [0.2, 0.3] : 9.748843660209453396563999419E+29 , Annualized: 1.101201065543326
+# result_D 600 [0.3, 1.0] : 1.624867264311455586143677266E-10 , Annualized: 1.051907509072279
+# findfont: Font family ['sans-serif'] not found. Falling back to DejaVu Sans.
+# ---------------------------------
+# The best one is:
+# result_D 400 [0.2, 0.3] , Annualized: 1.141926053131528
+# ---------------------------------
+# TEST!
+# BASE TEST!
+# The Test Annualized is:  1.2172442944720956
+# 196 times in 255 win, the win rate is:  0.7686274509803922
+# The Base Annualized is:  1.1088205367155777
+# 205 times in 267 win, the win rate is:  0.7677902621722846
+# ---------------------------------
+# You can buy:
+# 519995 长信金利趋势混合
+# Lost the data for today: 2021-08-11
+# You can buy:
+# 050012 博时策略混合
+# 720001 财通价值动量混合
+# 002906 南方中证500量化增强A
+# 006063 景顺长城MSCI中国A股国际通
+# 002424 博时文体娱乐主题混合
+# 003434 博时鑫泽灵活配置混合A
+# 000556 国投瑞银新机遇灵活配置混合A
+# 006048 长城中证500指数增强A
+# 001256 泓德优选成长混合
+# 008084 海富通先进制造股票C
+# 008477 安信价值驱动三年持有混合
+# 005437 易方达易百智能量化策略A
+# 001618 天弘中证电子ETF联接C
+# 519697 交银优势行业混合
+# 162208 泰达宏利首选企业股票
+# 160921 大成多策略混合(LOF)
+# 202017 南方深证成份ETF联接A
+# 560002 益民红利成长混合
+# 003884 汇安沪深300指数增强A
+# 000457 上投摩根核心成长股票
+# 161038 富国新兴成长量化精选混合
+# 001357 泓德泓富混合A
+# 006783 红土创新中证500增强A
+# 005225 广发量化多因子混合
+# 006449 浙商汇金量化精选混合
+# 004206 华商元亨灵活配置混合
+# 001607 英大策略优选A
+# 373020 上投摩根双核平衡混合
+# 000165 国投瑞银策略精选混合
+# 004481 华宝第三产业混合A
