@@ -11,7 +11,7 @@ import copy
 # 使用蒙特卡罗方法琢磨一下在什么时候买入比较合适。
 
 YI_BAI_WAN = Decimal(1000000)
-LIANG_BAI_TIAN = 40
+LIANG_BAI_TIAN = 60
 YI_WAN_CI = 30000
 D_SHI_JIAN = [50, 100, 200, 300, 400, 500, 600]
 D_ZHAN_JI = [[-0.1, 0], [0, 0.1], [0.1, 0.2], [0.15, 0.25], [0.2, 0.3], [0.3, 1.0]]
@@ -22,8 +22,8 @@ TRAIN_LENGTH = 3000 # 训练集长度。
 TEST_FUND_NUM = 30 # 测试时每次购买的基金数量。
 CPU_COST_MAX = 1000 # 最多寻找次数
 # ----------------------------
-DATA_FILE = r"../210812-akshare_fund_dict.data"
-MODULE_FILE = r"./where_to_buy_2-40-1000-3000.result"
+DATA_FILE = r"../210827-akshare_fund-dict.data"
+MODULE_FILE = r"./210827-where_to_buy_2-60days.result"
 
 # 获取所有基金数据。
 def get_data():
@@ -253,21 +253,22 @@ def show_test_result(test_result, test_day, A_test_result, A_test_day):
 	print('The Base Annualized is: ', the_avg)
 	print(the_win, 'times in', len(A_test_result), 'win, the win rate is: ', float(the_win) / len(A_test_result))
 	# 绘图。
-	plt.figure()
-	plt.plot(test_day, test_result, color='blue', label = 'plan D')
-	plt.plot(A_test_day, A_test_result, color='red', label = 'plan A')
-	plt.plot(A_test_day, [1] * len(A_test_result), color='black') 
-	plt.plot(A_test_day, [1.2] * len(A_test_result), color='green') 
-	x_index = []
-	x_value = []
-	space = int(len(test_day) / 10)
-	for i in range(len(test_day)):
-		if i % space == 0:
-			x_index.append(test_day[i])
-			x_value.append(list_date[test_day[i]])
-	plt.xticks(x_index, x_value)
-	plt.legend()
-	plt.show()
+	# plt.figure()
+	# plt.plot(test_day, test_result, color='blue', label = 'plan D')
+	# plt.plot(A_test_day, A_test_result, color='red', label = 'plan A')
+	# plt.plot(A_test_day, [1] * len(A_test_result), color='black') 
+	# plt.plot(A_test_day, [1.2] * len(A_test_result), color='green') 
+	# x_index = []
+	# x_value = []
+	# space = int(len(test_day) / 10)
+	# for i in range(len(test_day)):
+	# 	if i % space == 0:
+	# 		x_index.append(test_day[i])
+	# 		x_value.append(list_date[test_day[i]])
+	# plt.xticks(x_index, x_value)
+	# plt.legend()
+	# plt.show()
+
 	# plt.show(block = False)
 	# plt.pause(1)
 
@@ -282,6 +283,18 @@ def show_which_to_buy(d_i, d_j, the_day):
 		if D_fund_index == -1:
 			print('Lost the data for today:', list_date[the_day])
 			return -1
+	print('And hold', LIANG_BAI_TIAN, 'days.')
+	return 0
+
+def random_show_which_to_buy():
+	the_day = len(list_date) - 1
+	fund_enumerate = list(enumerate(list_data[the_day])) # [(0, 基金代码), ...]
+	print('You can random buy:')
+	for i in range(TEST_FUND_NUM):
+		fund_index = random.randint(0, len(fund_enumerate) - 1)
+		the_fund = fund_enumerate[fund_index][1]
+		the_fund_name = dict_name[the_fund]
+		print(the_fund, the_fund_name)
 	print('And hold', LIANG_BAI_TIAN, 'days.')
 	return 0
 
@@ -314,34 +327,38 @@ list_data = data_dict[2]
 # 因此，将游戏规则做出一定的改动会更公平。
 # 即，每次A和D都在同一个时间点买入。
 # 时间点的选择需要能够同时满足A和D的条件，会导致策略A的绝对收益变动，但不会影响A和D之间的相对好坏。
-# ------------------
+# # ------------------
 # train()
-# ------------------
-result = load_result()
-# 看看结果。
+# # ------------------
+# result = load_result()
+# # 看看结果。
+# print('---------------------------------')
+# show_result(result)
+# # 选出最佳方案。
+# print('---------------------------------')
+# the_end = []
+# for i in range(len(result)):
+# 	the_end.append(result[i][-1])
+# the_best = np.argmax(the_end) - 1
+# print('The best one is:')
+# d_i = int(the_best / len(D_ZHAN_JI))
+# d_j = int(the_best % len(D_ZHAN_JI))
+# D_annualized = pow( pow(float(result[d_i * len(D_ZHAN_JI) + d_j + 1][-1]), 1.0 / YI_WAN_CI), 200.0 / LIANG_BAI_TIAN) / SUN_HAO
+# print('result_D', D_SHI_JIAN[d_i], D_ZHAN_JI[d_j], ', Annualized:', D_annualized)
+# # 开始荐股。 
+# print('---------------------------------')
+# the_day = len(list_date) - 1
+# while show_which_to_buy(d_i, d_j, the_day) == -1:
+# 	the_day -= 1
+# # 使用测试集测试。
+# print('---------------------------------')
+# test_result, test_day = game_test(d_i, d_j)
+# A_test_result, A_test_day = base_game_test()
+# show_test_result(test_result, test_day, A_test_result, A_test_day)
+# 随机荐股。
 print('---------------------------------')
-show_result(result)
-# 选出最佳方案。
-print('---------------------------------')
-the_end = []
-for i in range(len(result)):
-	the_end.append(result[i][-1])
-the_best = np.argmax(the_end) - 1
-print('The best one is:')
-d_i = int(the_best / len(D_ZHAN_JI))
-d_j = int(the_best % len(D_ZHAN_JI))
-D_annualized = pow( pow(float(result[d_i * len(D_ZHAN_JI) + d_j + 1][-1]), 1.0 / YI_WAN_CI), 200.0 / LIANG_BAI_TIAN) / SUN_HAO
-print('result_D', D_SHI_JIAN[d_i], D_ZHAN_JI[d_j], ', Annualized:', D_annualized)
-# 开始荐股。 
-print('---------------------------------')
-the_day = len(list_date) - 1
-while show_which_to_buy(d_i, d_j, the_day) == -1:
-	the_day -= 1
-# 使用测试集测试。
-print('---------------------------------')
-test_result, test_day = game_test(d_i, d_j)
-A_test_result, A_test_day = base_game_test()
-show_test_result(test_result, test_day, A_test_result, A_test_day)
+random_show_which_to_buy()
+
 # input("Press Enter to continue...")
 
 # YI_BAI_WAN = Decimal(1000000)
@@ -534,3 +551,108 @@ show_test_result(test_result, test_day, A_test_result, A_test_day)
 # The Base Annualized is:  1.078754429493064
 # 596 times in 934 win, the win rate is:  0.6381156316916489
 # findfont: Font family ['sans-serif'] not found. Falling back to DejaVu Sans.
+
+
+
+# YI_BAI_WAN = Decimal(1000000)
+# LIANG_BAI_TIAN = 60
+# YI_WAN_CI = 30000
+# D_SHI_JIAN = [50, 100, 200, 300, 400, 500, 600]
+# D_ZHAN_JI = [[-0.1, 0], [0, 0.1], [0.1, 0.2], [0.15, 0.25], [0.2, 0.3], [0.3, 1.0]]
+# SUN_HAO = 0.93 # 年化损耗。
+# # ----------------------------
+# TEST_LENGTH = 1000 # 测试集长度。 
+# TRAIN_LENGTH = 3000 # 训练集长度。
+# TEST_FUND_NUM = 30 # 测试时每次购买的基金数量。
+# CPU_COST_MAX = 1000 # 最多寻找次数
+# # ----------------------------
+# DATA_FILE = r"../210827-akshare_fund-dict.data"
+# MODULE_FILE = r"./210827-where_to_buy_2-60days.result"
+# ---------------------------------
+# result_A: 2.993646993359897876650257815E+72 , Annualized: 1.0953930033710149
+# result_D 50 [-0.1, 0] : 1.227496494001835173443268037E-8 , Annualized: 1.073094709383889
+# result_D 50 [0, 0.1] : 1.758063070464137831714115080E+97 , Annualized: 1.1023564696206374
+# result_D 50 [0.1, 0.2] : 4.300913250567004178744683380E+175 , Annualized: 1.1246875600521362
+# result_D 50 [0.15, 0.25] : 1.304898174841562120963436879E+171 , Annualized: 1.1233882919088882
+# result_D 50 [0.2, 0.3] : 2.210385078468509268070050329E+199 , Annualized: 1.1315309483236666
+# result_D 50 [0.3, 1.0] : 3.132285777283682547848342003E+186 , Annualized: 1.1278174602723852
+# result_D 100 [-0.1, 0] : 1.766799560746140045736427099E-155 , Annualized: 1.0335281132582843
+# result_D 100 [0, 0.1] : 1.115030973385886369629711609E-8 , Annualized: 1.073083251829092
+# result_D 100 [0.1, 0.2] : 1.189504045098306812198830024E+74 , Annualized: 1.0958412585899342
+# result_D 100 [0.15, 0.25] : 6.507260777678651567860025376E+141 , Annualized: 1.1149980187722761
+# result_D 100 [0.2, 0.3] : 1.829839997541390274145459907E+176 , Annualized: 1.1248685226212758
+# result_D 100 [0.3, 1.0] : 1.005197048826967335364995284E+183 , Annualized: 1.12680985052133
+# result_D 200 [-0.1, 0] : 3.986362410753920623213533968E-35 , Annualized: 1.0658470642177669
+# result_D 200 [0, 0.1] : 1.111389048237185306236865370E+127 , Annualized: 1.11079331854538
+# result_D 200 [0.1, 0.2] : 4.559817983646584716318642632E+200 , Annualized: 1.131911546308322
+# result_D 200 [0.15, 0.25] : 2.288436205294428861200396501E+230 , Annualized: 1.140545343497016
+# result_D 200 [0.2, 0.3] : 1.093313491252155931102861583E+276 , Annualized: 1.1539527409995312
+# result_D 200 [0.3, 1.0] : 7.724057433298862415070829533E+204 , Annualized: 1.1331368615568853
+# result_D 300 [-0.1, 0] : 460430822139253418.4688628365 , Annualized: 1.0801389454536399
+# result_D 300 [0, 0.1] : 7.151125842616583815450847427E+189 , Annualized: 1.1287869553974312
+# result_D 300 [0.1, 0.2] : 1.850671091817962316481563057E+390 , Annualized: inf
+# result_D 300 [0.15, 0.25] : 3.699995728941218504000088698E+446 , Annualized: inf
+# result_D 300 [0.2, 0.3] : 1.522843519824843619672125122E+449 , Annualized: inf
+# result_D 300 [0.3, 1.0] : 1.793069753482222331583238330E+117 , Annualized: 1.108013951724073
+# result_D 400 [-0.1, 0] : 1.633247766328943453312102683E+85 , Annualized: 1.0989683077577241
+# result_D 400 [0, 0.1] : 2.958524943048299477425825598E+199 , Annualized: 1.131567600973667
+# result_D 400 [0.1, 0.2] : 7.503150389161505260112916370E+417 , Annualized: inf
+# result_D 400 [0.15, 0.25] : 4.275724710238886705196829413E+433 , Annualized: inf
+# result_D 400 [0.2, 0.3] : 2.107540749948871692835422501E+326 , Annualized: inf
+# result_D 400 [0.3, 1.0] : 4.905102289819933187790206250E+49 , Annualized: 1.0890259651501772
+# result_D 500 [-0.1, 0] : 7.344388732183015091500822174E+64 , Annualized: 1.0932623193267834
+# result_D 500 [0, 0.1] : 1.708911788031735508433485541E+172 , Annualized: 1.1237094167590367
+# result_D 500 [0.1, 0.2] : 2.328100513620672769820766874E+354 , Annualized: inf
+# result_D 500 [0.15, 0.25] : 4.780764914985518530236555727E+320 , Annualized: inf
+# result_D 500 [0.2, 0.3] : 6.590634645997914859655186927E+247 , Annualized: 1.145651393801489
+# result_D 500 [0.3, 1.0] : 1.711018616743830733792827639E+127 , Annualized: 1.1108465735057926
+# result_D 600 [-0.1, 0] : 4.265672946758469160929874660E+86 , Annualized: 1.0993667699722387
+# result_D 600 [0, 0.1] : 7.480428718314619311954367809E+171 , Annualized: 1.1236062709900945
+# result_D 600 [0.1, 0.2] : 4.710364929103570848796072170E+329 , Annualized: inf
+# result_D 600 [0.15, 0.25] : 2.660634304553072864474643999E+274 , Annualized: 1.1534764083291018
+# result_D 600 [0.2, 0.3] : 6.646071484073859004591480375E+196 , Annualized: 1.1308011079496505
+# result_D 600 [0.3, 1.0] : 1.905784879194485461804525387E+126 , Annualized: 1.1105757105472678
+# ---------------------------------
+# The best one is:
+# result_D 300 [0.2, 0.3] , Annualized: inf
+# ---------------------------------
+# You can buy:
+# 006593 博道中证500增强A
+# 501082 博时科创主题3年封闭混合
+# 040025 华安科技动力混合
+# 004674 富国新机遇灵活配置混合A
+# 160518 博时睿远
+# 001216 易方达新收益混合A
+# 001877 宝盈国家安全沪港深股票
+# 001113 南方大数据100A
+# 002861 工银智能制造股票
+# 001009 上投摩根安全战略股票
+# 040025 华安科技动力混合
+# 450004 国富深化价值混合
+# 000591 中银健康生活混合
+# 000404 易方达新兴成长灵活配置
+# 161611 融通内需驱动混合
+# 000531 东吴阿尔法混合
+# 008227 宝盈研究精选混合A
+# 002780 前海联合泓鑫混合A
+# 001749 招商中国机遇股票
+# 519767 交银科技创新灵活配置混合
+# 370027 上投摩根智选30混合
+# 001657 长安鑫富领先混合
+# 000831 工银医疗保健股票
+# 008082 国寿安保研究精选混合A
+# 007810 富国央企创新驱动ETF联接C
+# 001717 工银前沿医疗股票A
+# 000967 华泰柏瑞创新动力混合
+# 003956 南方教育股票
+# 660004 农银策略价值混合
+# 000591 中银健康生活混合
+# And hold 60 days.
+# ---------------------------------
+# TEST!
+# BASE TEST!
+# The Test Annualized is:  1.110451037081808
+# 368 times in 569 win, the win rate is:  0.6467486818980668
+# The Base Annualized is:  1.0804491444056092
+# 554 times in 838 win, the win rate is:  0.6610978520286396
+

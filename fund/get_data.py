@@ -22,15 +22,18 @@ import datetime
 # 2393  2021-08-05  3.6751
 # <class 'pandas.core.frame.DataFrame'>
 
+THE_FILE_NAME = r"./210827-akshare_fund"
+
 def get_data():
-	FILE_NAME = r"./210812-akshare_fund.data"
+	print('Get the data!')
+	file_name = THE_FILE_NAME + r".data"
 
 	fund_em_open_fund_daily_df = ak.fund_em_open_fund_daily()
 	print(fund_em_open_fund_daily_df)
 	# 总共数据量为11625
 
-	if os.path.exists(FILE_NAME):
-		file = open(FILE_NAME, "rb")
+	if os.path.exists(file_name):
+		file = open(file_name, "rb")
 		data = pickle.load(file)
 	else:
 		data = []
@@ -38,22 +41,29 @@ def get_data():
 	for i in range(len(data), len(fund_em_open_fund_daily_df)):
 		print(i)
 		one_data = []
-		fund_em_info_df = ak.fund_em_open_fund_info(fund=fund_em_open_fund_daily_df['基金代码'].iloc[i], indicator="累计净值走势")
+		try:
+			fund_em_info_df = ak.fund_em_open_fund_info(fund=fund_em_open_fund_daily_df['基金代码'].iloc[i], indicator="累计净值走势")
+		except:
+			print('Failed to get the data of', fund_em_open_fund_daily_df['基金代码'].iloc[i])
 		one_data.append(fund_em_open_fund_daily_df['基金代码'].iloc[i])
 		one_data.append(fund_em_open_fund_daily_df['基金简称'].iloc[i])
 		one_data.append(fund_em_info_df)
 		data.append(one_data)
-		if i % 100 == 0:
-			file = open(FILE_NAME, "wb")
+		if i % 500 == 0:
+			file = open(file_name, "wb")
 			pickle.dump(data, file)
 			file.close()
 
-	file = open(FILE_NAME, "wb")
+	file = open(file_name, "wb")
 	pickle.dump(data, file)
 	file.close()
 
 def clean_data():
-	file = open(r"./210812-akshare_fund.data","rb")
+	print('CLean the data!')
+	file_name = THE_FILE_NAME + r".data"
+	clean_file_name = THE_FILE_NAME + r"-clean.data"
+
+	file = open(file_name,"rb")
 	data = pickle.load(file)
 	print(len(data))
 
@@ -80,7 +90,7 @@ def clean_data():
 			clean_data.append(data[i])
 	print(len(clean_data))
 
-	file = open(r"./210812-akshare_fund_clean.data", "wb")
+	file = open(clean_file_name, "wb")
 	pickle.dump(clean_data, file)
 	file.close()
 
@@ -90,8 +100,12 @@ def dict_by_date():
 	# list_date: [2011-09-21, ..., 2021-08-05]
 	# list_data: [{基金代码: 当日累计净值, ...}, ...]
 	# data_dict: [dict_name, list_date, list_data]
-	file = open(r"./210812-akshare_fund_clean.data","rb")
-	# file = open(r"./akshare_fund-11420-clean-10804.data","rb")
+	print('Dict the data!')
+
+	clean_file_name = THE_FILE_NAME + r"-clean.data"
+	dict_file_name = THE_FILE_NAME + r"-dict.data"
+
+	file = open(clean_file_name, "rb")
 	data = pickle.load(file)
 	print(len(data))
 
@@ -120,10 +134,10 @@ def dict_by_date():
 	# print(list_data)
 
 	data_dict = [dict_name, list_date, list_data]
-	file = open(r"./210812-akshare_fund_dict.data", "wb")
+	file = open(dict_file_name, "wb")
 	pickle.dump(data_dict, file)
 	file.close()
 
 # get_data()
-# clean_data()
+clean_data()
 dict_by_date()
