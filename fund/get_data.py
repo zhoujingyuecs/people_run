@@ -22,7 +22,7 @@ import datetime
 # 2393  2021-08-05  3.6751
 # <class 'pandas.core.frame.DataFrame'>
 
-THE_FILE_NAME = r"./210827-akshare_fund"
+THE_FILE_NAME = r"./210917-akshare_fund"
 
 def get_data():
 	print('Get the data!')
@@ -138,6 +138,6 @@ def dict_by_date():
 	pickle.dump(data_dict, file)
 	file.close()
 
-# get_data()
+get_data()
 clean_data()
 dict_by_date()
